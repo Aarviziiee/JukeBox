@@ -1,4 +1,3 @@
-
 package org.services;
 
 import javax.sound.sampled.*;
@@ -11,27 +10,33 @@ public class AudioPlayerService {
         File file = new File(filePath);
 
         if (!file.exists()) {
-            System.out.println("❌ File not found: " + title + ".wav");
+            System.out.println(" File not found: " + file.getAbsolutePath());
             return;
         }
 
-        try {
-            AudioInputStream audioStream = AudioSystem.getAudioInputStream(file);
+        try (AudioInputStream audioStream = AudioSystem.getAudioInputStream(file)) {
             Clip clip = AudioSystem.getClip();
             clip.open(audioStream);
             clip.start();
 
-            System.out.println("🎵 Now Playing: " + title + ".wav");
+            System.out.println("🎵 Now Playing: " + file.getName());
 
-            while (clip.isRunning()) {
+            // Add a wait message
+            while (!clip.isRunning())
+                Thread.sleep(10);
+            while (clip.isRunning())
                 Thread.sleep(100);
-            }
 
             clip.close();
-        } catch (Exception e) {
-            System.out.println("❌ Error playing file: " + title);
-            e.printStackTrace();
+        } catch (UnsupportedAudioFileException e) {
+            System.out.println("Unsupported audio file format.");
+        } catch (LineUnavailableException e) {
+            System.out.println(" Audio line unavailable (used by another app?).");
+        } catch (IOException e) {
+            System.out.println("IO error playing the audio.");
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
         }
+
     }
 }
-
